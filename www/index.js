@@ -3,8 +3,10 @@ import { memory } from "wasm-package/playing_with_canvas_bg";
 
 
 const canvas = document.getElementById("playing-canvas");
-const HEIGNT = 400
-const WIDTH = 600
+const HEIGNT = 800
+const WIDTH = 1200
+const K = 100000;
+
 
 const BORDER_COLOR = "#F0000F"
 const FILL_COLOR = "#00F00F"
@@ -26,11 +28,11 @@ function draw_rect(rect) {
     ctx.fillStyle = FILL_COLOR;
 
     ctx.beginPath();
-    ctx.moveTo(points[0], points[1]);
+    ctx.moveTo(points[0]/K, points[1]/K);
 
     for(let idx = 2; idx < size*2;idx+=2) {
-        const x = points[idx];
-        const y = points[idx+1];
+        const x = points[idx]/K;
+        const y = points[idx+1]/K;
         ctx.lineTo(x, y);
     }
 
@@ -40,12 +42,23 @@ function draw_rect(rect) {
 
 }
 
-const rect = wasm.Rect.new();
-rect.push(wasm.Point.new(0,0));
-rect.push(wasm.Point.new(100,0));
-rect.push(wasm.Point.new(50,100));
 
-draw_rect(rect);
+var rect = wasm.Rect.new();
+rect.push(wasm.Point.new(200*K,200*K));
+rect.push(wasm.Point.new(300*K,200*K));
+rect.push(wasm.Point.new(300*K,300*K));
+rect.push(wasm.Point.new(200*K,300*K));
 
 
+const renderLoop = () => {
+
+    ctx.clearRect(0, 0, WIDTH, HEIGNT);
+
+    draw_rect(rect);
+    rect.rotate(wasm.Point.new(310*K, 310*K), 0.01);
+
+    requestAnimationFrame(renderLoop);
+  };
+
+requestAnimationFrame(renderLoop);
 

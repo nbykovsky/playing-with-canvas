@@ -18,33 +18,34 @@ extern {
 #[wasm_bindgen]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Point {
-    _x: u32,
-    _y: u32
+    _x: i32,
+    _y: i32
 }
 
 #[wasm_bindgen]
 impl Point {
-    pub fn new(x: u32, y: u32) -> Point{
+    pub fn new(x: i32, y: i32) -> Point{
         Point {_x: x, _y: y}
     }
 
-    pub fn x(&self) -> u32 {
+    pub fn x(&self) -> i32 {
         self._x
     }
 
-    pub fn y(&self) -> u32 {
+    pub fn y(&self) -> i32 {
         self._y
     }
 
     pub fn rotate(&mut self, center: Point, angle: f32) {
-        let x = (self._x - center._x) as f32;
+        let x = (self._x  - center._x) as f32;
         let y = (self._y - center._y) as f32;
 
         let s = angle.sin();
         let c = angle.cos();
 
-        let x_new = (x*c - y*s) as u32;
-        let y_new = (x*s + y*c) as u32;
+
+        let x_new = (x*c - y*s) as i32;
+        let y_new = (x*s + y*c) as i32;
 
         self._x = x_new + center._x;
         self._y = y_new + center._y;
@@ -73,7 +74,6 @@ pub struct Rect {
 impl Rect {
     pub fn new() -> Rect{
         Rect {points: Vec::new()}
-        // Rect {points: vec![Point::new(10,11), Point::new(20,21),Point::new(30,31)]}
     }
     
     pub fn push(&mut self, point: Point) {
@@ -96,4 +96,8 @@ impl Rect {
 
 }
 
+#[wasm_bindgen]
+pub struct Scene {
+    rects: Vec<Rect>
+}
 
