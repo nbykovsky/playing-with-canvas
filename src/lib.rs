@@ -1,6 +1,6 @@
 mod utils;
 
-use std::fmt::format;
+use std::{fmt::format};
 
 use wasm_bindgen::prelude::*;
 
@@ -11,93 +11,134 @@ use wasm_bindgen::prelude::*;
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
-extern {
+extern "C" {
     fn alert(s: &str);
 }
 
-#[wasm_bindgen]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct Point {
-    _x: i32,
-    _y: i32
+    x: i32,
+    y: i32,
 }
 
-#[wasm_bindgen]
 impl Point {
-    pub fn new(x: i32, y: i32) -> Point{
-        Point {_x: x, _y: y}
+    pub fn new(x: i32, y: i32) -> Point {
+        Point { x, y }
     }
 
-    pub fn x(&self) -> i32 {
-        self._x
-    }
-
-    pub fn y(&self) -> i32 {
-        self._y
-    }
-
-    pub fn rotate(&mut self, center: Point, angle: f32) {
-        let x = (self._x  - center._x) as f32;
-        let y = (self._y - center._y) as f32;
+    pub fn rotate(&self,angle: f32) -> Point {
+        let x = self.x  as f32;
+        let y = self.y  as f32;
 
         let s = angle.sin();
         let c = angle.cos();
 
+        let x_new = x * c - y * s;
+        let y_new = x * s + y * c;
 
-        let x_new = (x*c - y*s) as i32;
-        let y_new = (x*s + y*c) as i32;
+        Point::new(x_new.round() as i32, y_new.round() as i32)
+    }
 
-        self._x = x_new + center._x;
-        self._y = y_new + center._y;
-
+    pub fn shift(&self, vector: Point) -> Point {
+        Point::new(self.x+vector.x, self.y+vector.y)
     }
 }
 
-
-
-#[wasm_bindgen]
-pub fn start() -> Point {
-    Point {_x:0, _y:0}
+#[derive(Default, Debug)]
+pub struct Polygon {
+    points: Vec<Point>,
+    angle: f32,
+    center: Point,
+    speed_vector: Point,
+    speed_angle: f32,
 }
 
-#[wasm_bindgen]
-pub fn end() -> Point {
-    Point {_x:200, _y:200}
-}
+impl Polygon {
 
-#[wasm_bindgen]
-pub struct Rect {
-    points: Vec<Point>
-}
+    pub fn render(&self, buf: &mut Vec<i32>) -> i32{
+        let rotated_points = self.points.iter().map(|&p| p.rotate(self.angle));
+        let shifted_points = rotated_points.map(|p| p.shift(self.center));
 
-#[wasm_bindgen]
-impl Rect {
-    pub fn new() -> Rect{
-        Rect {points: Vec::new()}
+        let number_of_numbers = 2 * self.points.len() as i32;
+
+        buf.push(number_of_numbers);
+
+        for p in shifted_points {
+            buf.push(p.x);
+            buf.push(p.y);
+        }
+        number_of_numbers + 1
+    }
+
+    pub fn tick(&mut self) {
+        self.angle += self.speed_angle;
+        self.center = self.center.shift(self.speed_vector);
     }
     
-    pub fn push(&mut self, point: Point) {
-        self.points.push(point)
-    }
-
-    pub fn rotate(&mut self, center: Point, angle: f32) {
-        for point in self.points.iter_mut() {
-            point.rotate(center, angle);
-        }
-    }
-
-    pub fn points(&self) -> *const Point {
-        self.points.as_ptr()
-    }
-
-    pub fn size(&self) -> u32 {
-        self.points.len() as u32
-    }
-
 }
 
 #[wasm_bindgen]
 pub struct Scene {
-    rects: Vec<Rect>
+    shapes: Vec<Polygon>
 }
 
+#[wasm_bindgen]
+impl Scene {
+    pub fn new() -> Self{
+        let mut rect = Polygon::default();
+        rect.points.push(Point::new(-100,100));
+        rect.points.push(Point::new(100,100));
+        rect.points.push(Point::new(100,-100));
+        rect.points.push(Point::new(-100,-100));
+        rect.center = Point::new(500, 500);
+        rect.speed_angle = 0.01;
+        rect.speed_vector = Point::new(1,-1);
+
+        Scene {shapes: vec![rect]}
+    }
+
+    pub fn tick(&mut self) {
+        for shape in self.shapes.iter_mut() {
+            shape.tick();
+        }
+    }
+
+    pub fn render(&self) -> *const i32 {
+        let mut buf:Vec<i32> = vec![0];
+        let mut number_of_numbers:i32 = 1;
+        for shape in self.shapes.iter() {
+            number_of_numbers += shape.render(&mut buf);
+        }
+        buf[0] = number_of_numbers;
+        buf.as_ptr()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn run_me() {
+        let rect = Polygon::default();
+        println!("{:?}", rect);
+    }
+
+    #[test]
+    fn test_render() {
+        let mut rect = Polygon::default();
+        rect.points.push(Point::new(1,1));
+        rect.points.push(Point::new(1,-1));
+
+        rect.angle = std::f32::consts::PI / 2.0;
+        rect.center = Point::new(2,2);
+
+        let mut buf: Vec<i32> = Vec::new();
+
+        rect.render(&mut buf);
+
+        assert_eq!(buf, vec![2, 1, 3, 3, 3]);
+
+    }
+
+}
