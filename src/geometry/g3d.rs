@@ -1,52 +1,52 @@
 use super::g2d;
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
-pub struct Point {
+pub struct Point3 {
     x: i32,
     y: i32,
     z: i32,
 }
 
-impl Point {
+impl Point3 {
     pub fn new(x: i32, y: i32, z: i32) -> Self {
-        Point { x, y, z }
+        Point3 { x, y, z }
     }
 
-    pub fn project(&self) -> g2d::Point {
-        g2d::Point::new(self.x, self.y)
+    pub fn project(&self) -> g2d::Point2 {
+        g2d::Point2::new(self.x, self.y)
     }
 
-    fn sub(&self, other: &Point) -> Point {
-        Point::new(self.x - other.x, self.y - other.y, self.z - other.z)
+    fn sub(&self, other: &Point3) -> Point3 {
+        Point3::new(self.x - other.x, self.y - other.y, self.z - other.z)
     }
 
     /// https://www.khanacademy.org/math/multivariable-calculus/thinking-about-multivariable-function/x786f2022:vectors-and-matrices/a/cross-products-mvc
-    fn x_product(&self, other: &Point) -> Point {
+    fn x_product(&self, other: &Point3) -> Point3 {
         let x = self.y * other.z - self.z * other.y;
         let y = self.z * other.x - self.x * other.z;
         let z = self.x * other.y - self.y * other.x;
-        Point::new(x, y, z)
+        Point3::new(x, y, z)
     }
 
-    fn dot_product(&self, other: &Point) -> i32 {
+    fn dot_product(&self, other: &Point3) -> i32 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Triagnle {
-    p1: Point,
-    p2: Point,
-    p3: Point,
+pub struct Triagnle3 {
+    p1: Point3,
+    p2: Point3,
+    p3: Point3,
 }
 
-impl Triagnle {
-    pub fn new(p1: Point, p2: Point, p3: Point) -> Self {
-        Triagnle { p1, p2, p3 }
+impl Triagnle3 {
+    pub fn new(p1: Point3, p2: Point3, p3: Point3) -> Self {
+        Triagnle3 { p1, p2, p3 }
     }
 
     /// if projection is a line it will return None
-    pub fn project(&self) -> Option<g2d::Triangle> {
+    pub fn project(&self) -> Option<g2d::Triangle2> {
         let p1 = self.p1.project();
         let p2 = self.p2.project();
         let p3 = self.p3.project();
@@ -55,12 +55,12 @@ impl Triagnle {
         if on_the_same_line {
             None
         } else {
-            Some(g2d::Triangle::new(p1, p2, p3))
+            Some(g2d::Triangle2::new(p1, p2, p3))
         }
     }
 
     /// if true other should be painted BEFORE self
-    pub fn is_above(&self, other: &Triagnle) -> bool {
+    pub fn is_above(&self, other: &Triagnle3) -> bool {
         match (self.project(), other.project()) {
             (Some(slf), Some(otr)) => {
                 if let Some(point) = slf.intersection(&otr) {
@@ -91,7 +91,7 @@ impl Plane {
     }
 
     /// https://kitchingroup.cheme.cmu.edu/blog/2015/01/18/Equation-of-a-plane-through-three-points/
-    fn from_triangle(triangle: &Triagnle) -> Self {
+    fn from_triangle(triangle: &Triagnle3) -> Self {
         let v1 = triangle.p3.sub(&triangle.p1);
         let v2 = triangle.p2.sub(&triangle.p1);
         let x_prod = v1.x_product(&v2);
@@ -113,10 +113,10 @@ mod test {
 
     #[test]
     fn plane() {
-        let triangle = Triagnle::new(
-            Point::new(0, 0, 0),
-            Point::new(-1, 1, 0),
-            Point::new(1, 1, 0),
+        let triangle = Triagnle3::new(
+            Point3::new(0, 0, 0),
+            Point3::new(-1, 1, 0),
+            Point3::new(1, 1, 0),
         );
         let plane = Plane::from_triangle(&triangle);
 
@@ -125,15 +125,15 @@ mod test {
 
     #[test]
     fn parallel_triangles() {
-        let triangle1 = Triagnle::new(
-            Point::new(0, 0, 0),
-            Point::new(-1, 1, 0),
-            Point::new(1, 1, 0),
+        let triangle1 = Triagnle3::new(
+            Point3::new(0, 0, 0),
+            Point3::new(-1, 1, 0),
+            Point3::new(1, 1, 0),
         );
-        let triangle2 = Triagnle::new(
-            Point::new(0, 0, 1),
-            Point::new(-1, 1, 1),
-            Point::new(1, 1, 1),
+        let triangle2 = Triagnle3::new(
+            Point3::new(0, 0, 1),
+            Point3::new(-1, 1, 1),
+            Point3::new(1, 1, 1),
         );
 
         assert!(!triangle1.is_above(&triangle2));
@@ -142,15 +142,15 @@ mod test {
 
     #[test]
     fn overlapping_triangles() {
-        let triangle1 = Triagnle::new(
-            Point::new(0, 0, 0),
-            Point::new(-1, 1, -1),
-            Point::new(1, 1, -1),
+        let triangle1 = Triagnle3::new(
+            Point3::new(0, 0, 0),
+            Point3::new(-1, 1, -1),
+            Point3::new(1, 1, -1),
         );
-        let triangle2 = Triagnle::new(
-            Point::new(0, 0, 1),
-            Point::new(-1, -1, 2),
-            Point::new(1, -1, 2),
+        let triangle2 = Triagnle3::new(
+            Point3::new(0, 0, 1),
+            Point3::new(-1, -1, 2),
+            Point3::new(1, -1, 2),
         );
 
         assert!(!triangle1.is_above(&triangle2));
@@ -159,15 +159,15 @@ mod test {
 
     #[test]
     fn non_overlapping_triangles() {
-        let triangle1 = Triagnle::new(
-            Point::new(0, 1, 0),
-            Point::new(-1, 2, -1),
-            Point::new(1, 2, -1),
+        let triangle1 = Triagnle3::new(
+            Point3::new(0, 1, 0),
+            Point3::new(-1, 2, -1),
+            Point3::new(1, 2, -1),
         );
-        let triangle2 = Triagnle::new(
-            Point::new(0, 0, 1),
-            Point::new(-1, -1, 2),
-            Point::new(1, -1, 2),
+        let triangle2 = Triagnle3::new(
+            Point3::new(0, 0, 1),
+            Point3::new(-1, -1, 2),
+            Point3::new(1, -1, 2),
         );
 
         assert!(!triangle1.is_above(&triangle2));

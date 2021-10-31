@@ -78,21 +78,20 @@ impl Polygon {
 
 #[wasm_bindgen]
 pub struct Scene {
-    scene_tmp: geometry::SceneTmp
+    scene_tmp: geometry::SceneTmp,
 }
 
 #[wasm_bindgen]
 impl Scene {
-   
     pub fn new() -> Self {
-        let tri = geometry::g3d::Triagnle::new(
-            geometry::g3d::Point::new(200, 200, 400),
-            geometry::g3d::Point::new(600, 200, 400),
-            geometry::g3d::Point::new(300, 500, 0),
+        let tri = geometry::g3d::Triagnle3::new(
+            geometry::g3d::Point3::new(200, 200, 400),
+            geometry::g3d::Point3::new(600, 200, 400),
+            geometry::g3d::Point3::new(300, 500, 0),
         );
         let shapes = geometry::SetOfTriangles::new(vec![tri]);
         let scene_tmp = geometry::SceneTmp::new(shapes);
-        Self {scene_tmp}
+        Self { scene_tmp }
     }
 
     pub fn render(&self) -> *const i32 {

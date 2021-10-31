@@ -4,21 +4,21 @@ pub mod g2d;
 pub mod g3d;
 
 pub trait Shape {
-    fn approximate(&self) -> Vec<g3d::Triagnle>;
+    fn approximate(&self) -> Vec<g3d::Triagnle3>;
 }
 
 pub struct SetOfTriangles {
-    triangles: Vec<g3d::Triagnle>,
+    triangles: Vec<g3d::Triagnle3>,
 }
 
 impl SetOfTriangles {
-    pub fn new(triangles: Vec<g3d::Triagnle>) -> Self {
+    pub fn new(triangles: Vec<g3d::Triagnle3>) -> Self {
         SetOfTriangles { triangles }
     }
 }
 
 impl Shape for SetOfTriangles {
-    fn approximate(&self) -> Vec<g3d::Triagnle> {
+    fn approximate(&self) -> Vec<g3d::Triagnle3> {
         self.triangles.clone()
     }
 }
@@ -32,12 +32,12 @@ impl SceneTmp {
         Self { shapes }
     }
 
-    fn get_all_triangles(&self) -> Vec<g3d::Triagnle> {
-        let result: Vec<g3d::Triagnle> = self.shapes.triangles.clone();
+    fn get_all_triangles(&self) -> Vec<g3d::Triagnle3> {
+        let result: Vec<g3d::Triagnle3> = self.shapes.triangles.clone();
         result
     }
 
-    fn build_graph(&self, triangles_repo: &Vec<g3d::Triagnle>) -> HashMap<usize, HashSet<usize>> {
+    fn build_graph(&self, triangles_repo: &Vec<g3d::Triagnle3>) -> HashMap<usize, HashSet<usize>> {
         let mut graph: HashMap<usize, HashSet<usize>> = HashMap::new();
         for i in 0..triangles_repo.len() {
             for j in 0..triangles_repo.len() {
@@ -67,7 +67,7 @@ impl SceneTmp {
         order.push(node);
     }
 
-    fn get_ordered_projection(&self) -> Vec<g2d::Triangle> {
+    fn get_ordered_projection(&self) -> Vec<g2d::Triangle2> {
         let triangles_repo = self.get_all_triangles();
         let mut graph = self.build_graph(&triangles_repo);
         let mut order: Vec<usize> = Vec::new();
@@ -109,25 +109,25 @@ mod test {
 
     #[test]
     fn ordered_triangles() {
-        let t1 = g3d::Triagnle::new(
-            g3d::Point::new(0, 0, 0),
-            g3d::Point::new(-1, 1, 0),
-            g3d::Point::new(1, 1, 0),
+        let t1 = g3d::Triagnle3::new(
+            g3d::Point3::new(0, 0, 0),
+            g3d::Point3::new(-1, 1, 0),
+            g3d::Point3::new(1, 1, 0),
         );
-        let t2 = g3d::Triagnle::new(
-            g3d::Point::new(0, 0, 1),
-            g3d::Point::new(-1, 1, 1),
-            g3d::Point::new(1, 1, 1),
+        let t2 = g3d::Triagnle3::new(
+            g3d::Point3::new(0, 0, 1),
+            g3d::Point3::new(-1, 1, 1),
+            g3d::Point3::new(1, 1, 1),
         );
-        let t3 = g3d::Triagnle::new(
-            g3d::Point::new(0, 0, -1),
-            g3d::Point::new(-1, 1, -1),
-            g3d::Point::new(1, 1, -1),
+        let t3 = g3d::Triagnle3::new(
+            g3d::Point3::new(0, 0, -1),
+            g3d::Point3::new(-1, 1, -1),
+            g3d::Point3::new(1, 1, -1),
         );
-        let t4 = g3d::Triagnle::new(
-            g3d::Point::new(0, 0, -10),
-            g3d::Point::new(-1, -1, -10),
-            g3d::Point::new(1, -1, -10),
+        let t4 = g3d::Triagnle3::new(
+            g3d::Point3::new(0, 0, -10),
+            g3d::Point3::new(-1, -1, -10),
+            g3d::Point3::new(1, -1, -10),
         );
         let shapes = SetOfTriangles::new(vec![t1.clone(), t2.clone(), t3.clone(), t4.clone()]);
         let scene = SceneTmp::new(shapes);
