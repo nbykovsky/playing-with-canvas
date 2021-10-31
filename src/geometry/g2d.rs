@@ -2,24 +2,13 @@ use std::cmp;
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub struct Point {
-    x: i32,
-    y: i32,
+    pub x: i32,
+    pub y: i32,
 }
 
 impl Point {
     pub fn new(x: i32, y: i32) -> Self {
         Point { x, y }
-    }
-}
-
-pub struct Vector {
-    x: i32,
-    y: i32,
-}
-
-impl Vector {
-    pub fn new(x: i32, y: i32) -> Self {
-        Vector { x, y }
     }
 }
 
@@ -115,14 +104,15 @@ impl<'a> Segment<'a> {
     }
 }
 
-struct Triangle<'a> {
-    p1: & 'a Point,
-    p2: & 'a Point,
-    p3: & 'a Point,
+#[derive(Debug, PartialEq, Eq)]
+pub struct Triangle {
+    pub p1: Point,
+    pub p2: Point,
+    pub p3: Point,
 }
 
-impl <'a>Triangle<'a> {
-    pub fn new(p1: & 'a Point, p2: & 'a Point, p3: & 'a Point) -> Self {
+impl Triangle {
+    pub fn new(p1: Point, p2: Point, p3: Point) -> Self {
         Triangle { p1, p2, p3 }
     }
 
@@ -153,9 +143,9 @@ impl <'a>Triangle<'a> {
     pub fn intersection(&self, other: &Triangle) -> Option<Point> {
         // if one triangle inside other
         if self.is_inside(&other.p1) {
-            return Some(*other.p1);
+            return Some(other.p1);
         } else if other.is_inside(&self.p1) {
-            return Some(*self.p1);
+            return Some(self.p1);
         }
 
         // checking that any segments are intersecting
@@ -173,7 +163,6 @@ impl <'a>Triangle<'a> {
                 if intersection.is_some() {
                     return intersection;
                 }
-
             }
         }
         None
@@ -224,9 +213,7 @@ mod test {
 
     #[test]
     fn is_inside() {
-        let (p1, p2, p3) = (Point::new(0, 0), Point::new(2, 2), Point::new(-2, 2));
-
-        let triangle = Triangle::new(&p1, &p2, &p3);
+        let triangle = Triangle::new(Point::new(0, 0), Point::new(2, 2), Point::new(-2, 2));
         assert!(triangle.is_inside(&Point::new(0, 0)));
         assert!(triangle.is_inside(&Point::new(0, 1)));
         assert!(!triangle.is_inside(&Point::new(-1, -1)));
@@ -234,33 +221,24 @@ mod test {
 
     #[test]
     fn triangls_intersection_one_point() {
-        let (p1, p2, p3) = (Point::new(0, 0), Point::new(2, 2), Point::new(-2, 2));
-        let (q1, q2, q3) = (Point::new(0, 0), Point::new(2, -2), Point::new(-2, -2));
+        let triangle1 = Triangle::new(Point::new(0, 0), Point::new(2, 2), Point::new(-2, 2));
+        let triangle2 = Triangle::new(Point::new(0, 0), Point::new(2, -2), Point::new(-2, -2));
 
-        let triangle1 = Triangle::new(&p1, &p2, &p3);
-        let triangle2 = Triangle::new(&q1, &q2, &q3);
-
-        assert_eq!(triangle1.intersection(&triangle2), Some(Point::new(0,0)));
+        assert_eq!(triangle1.intersection(&triangle2), Some(Point::new(0, 0)));
     }
 
     #[test]
     fn triangls_intersection_inside() {
-        let (p1, p2, p3) = (Point::new(0, 0), Point::new(10, 5), Point::new(-10, 5));
-        let (q1, q2, q3) = (Point::new(0, 1), Point::new(1, 2), Point::new(-1, 2));
+        let triangle1 = Triangle::new(Point::new(0, 0), Point::new(10, 5), Point::new(-10, 5));
+        let triangle2 = Triangle::new(Point::new(0, 1), Point::new(1, 2), Point::new(-1, 2));
 
-        let triangle1 = Triangle::new(&p1, &p2, &p3);
-        let triangle2 = Triangle::new(&q1, &q2, &q3);
-
-        assert_eq!(triangle1.intersection(&triangle2), Some(Point::new(0,1)));
+        assert_eq!(triangle1.intersection(&triangle2), Some(Point::new(0, 1)));
     }
 
     #[test]
     fn triangls_intersection_dont_intersect() {
-        let (p1, p2, p3) = (Point::new(1, 1), Point::new(2, 2), Point::new(-2, 2));
-        let (q1, q2, q3) = (Point::new(0, 0), Point::new(2, -2), Point::new(-2, -2));
-
-        let triangle1 = Triangle::new(&p1, &p2, &p3);
-        let triangle2 = Triangle::new(&q1, &q2, &q3);
+        let triangle1 = Triangle::new(Point::new(1, 1), Point::new(2, 2), Point::new(-2, 2));
+        let triangle2 = Triangle::new(Point::new(0, 0), Point::new(2, -2), Point::new(-2, -2));
 
         assert_eq!(triangle1.intersection(&triangle2), None);
     }

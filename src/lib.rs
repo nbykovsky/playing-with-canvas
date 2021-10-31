@@ -78,64 +78,24 @@ impl Polygon {
 
 #[wasm_bindgen]
 pub struct Scene {
-    shapes: Vec<Polygon>,
+    scene_tmp: geometry::SceneTmp
 }
 
 #[wasm_bindgen]
 impl Scene {
+   
     pub fn new() -> Self {
-        let mut rect = Polygon::default();
-        rect.points.push(Point::new(-100, 100));
-        rect.points.push(Point::new(100, 100));
-        rect.points.push(Point::new(100, -100));
-        rect.points.push(Point::new(-100, -100));
-        rect.center = Point::new(500, 500);
-        rect.speed_angle = 0.01;
-        rect.speed_vector = Point::new(1, -1);
-
-        Scene { shapes: vec![rect] }
-    }
-
-    pub fn tick(&mut self) {
-        for shape in self.shapes.iter_mut() {
-            shape.tick();
-        }
+        let tri = geometry::g3d::Triagnle::new(
+            geometry::g3d::Point::new(200, 200, 400),
+            geometry::g3d::Point::new(600, 200, 400),
+            geometry::g3d::Point::new(300, 500, 0),
+        );
+        let shapes = geometry::SetOfTriangles::new(vec![tri]);
+        let scene_tmp = geometry::SceneTmp::new(shapes);
+        Self {scene_tmp}
     }
 
     pub fn render(&self) -> *const i32 {
-        let mut buf: Vec<i32> = vec![0];
-        let mut number_of_numbers: i32 = 1;
-        for shape in self.shapes.iter() {
-            number_of_numbers += shape.render(&mut buf);
-        }
-        buf[0] = number_of_numbers;
-        buf.as_ptr()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn run_me() {
-        let rect = Polygon::default();
-        println!("{:?}", rect);
-    }
-
-    #[test]
-    fn test_render() {
-        let mut rect = Polygon::default();
-        rect.points.push(Point::new(1, 1));
-        rect.points.push(Point::new(1, -1));
-
-        rect.angle = std::f32::consts::PI / 2.0;
-        rect.center = Point::new(2, 2);
-
-        let mut buf: Vec<i32> = Vec::new();
-
-        rect.render(&mut buf);
-
-        assert_eq!(buf, vec![4, 1, 3, 3, 3]);
+        self.scene_tmp.render()
     }
 }

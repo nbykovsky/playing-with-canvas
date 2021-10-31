@@ -20,38 +20,27 @@ ctx.fillStyle = FILL_COLOR;
 function draw_scene(scene) {
     const bufPtr = scene.render();
     const oneElelemtArray = new Int32Array(memory.buffer, bufPtr, 1);
-    const bufSize = oneElelemtArray[0];
-    var buf = new Int32Array(memory.buffer, bufPtr, bufSize);
+    const numTriangles = oneElelemtArray[0];
+    var buf = new Int32Array(memory.buffer, bufPtr, numTriangles*6+1);
 
-    var idx = 1;
-    while (idx < buf.length) {
-        var num_remaining = buf[idx++];
-
-        if (num_remaining == 0) {
-            continue;
-        }
-        
+    for(var idx = 0; idx < numTriangles; idx++) {
         ctx.beginPath();
+        for(var jdx = 0; jdx < 3; jdx++) {
+            const x_idx = idx*6+1 + jdx*2;
+            const y_idx = x_idx + 1;
+            const x = buf[x_idx];
+            const y = buf[y_idx];
 
-        const x = buf[idx++];
-        const y = buf[idx++];
-        num_remaining -= 2;
-
-        ctx.moveTo(x, y);
-        while (num_remaining > 0) {
-            const x = buf[idx++];
-            const y = buf[idx++];
-
-            ctx.lineTo(x, y);
-
-            num_remaining -= 2;
-        }
-
+            if (jdx == 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        } 
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
     }
-
 }
 
 var scene = wasm.Scene.new();
