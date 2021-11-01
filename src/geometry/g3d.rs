@@ -7,6 +7,8 @@ pub struct Point3 {
     z: i32,
 }
 
+type Vector3 = Point3;
+
 impl Point3 {
     pub fn new(x: i32, y: i32, z: i32) -> Self {
         Point3 { x, y, z }
@@ -30,6 +32,42 @@ impl Point3 {
 
     fn dot_product(&self, other: &Point3) -> i32 {
         self.x * other.x + self.y * other.y + self.z * other.z
+    }
+
+    /// https://stackoverflow.com/questions/6721544/circular-rotation-around-an-arbitrary-axis
+    fn rotate(&self, axis_point: &Point3, axis_vector: &Vector3, angle: f32) -> Point3 {
+        let sin = angle.sin();
+        let cos = angle.cos();
+        let (x, y, z) = (self.x as f32, self.y as f32, self.z as f32);
+        let (a, b, c) = (
+            axis_point.x as f32,
+            axis_point.y as f32,
+            axis_point.z as f32,
+        );
+        let (u, v, w) = (
+            axis_vector.x as f32,
+            axis_vector.y as f32,
+            axis_vector.z as f32,
+        );
+        let sm = (u.powf(2.) + v.powf(2.) + w.powf(2.)).sqrt();
+        let (u, v, w) = (u / sm, v / sm, w / sm);
+        let new_x = (a * (v * v + w * w) - u * (b * v + c * w - u * x - v * y - w * z))
+            * (1. - cos)
+            + x * cos
+            + (-c * v + b * w - w * y + v * z) * sin;
+        let new_y = (b * (u * u + w * w) - v * (a * u + c * w - u * x - v * y - w * z))
+            * (1. - cos)
+            + y * cos
+            + (c * u - a * w + w * x - u * z) * sin;
+        let new_z = (c * (u * u + v * v) - w * (a * u + b * v - u * x - v * y - w * z))
+            * (1. - cos)
+            + z * cos
+            + (-b * u + a * v - v * x + u * y) * sin;
+        Point3::new(
+            new_x.round() as i32,
+            new_y.round() as i32,
+            new_z.round() as i32,
+        )
     }
 }
 
@@ -172,5 +210,37 @@ mod test {
 
         assert!(!triangle1.is_above(&triangle2));
         assert!(!triangle2.is_above(&triangle1));
+    }
+
+    #[test]
+    fn point_rotation() {
+        assert_eq!(
+            Point3::new(1, 1, 1).rotate(&Point3::new(0, 0, 0), &Vector3::new(1, 1, 1), 10.),
+            Point3::new(1, 1, 1)
+        );
+        assert_eq!(
+            Point3::new(1, 0, 0).rotate(
+                &Point3::new(0, 0, 0),
+                &Vector3::new(0, 0, 1),
+                std::f32::consts::PI / 2.
+            ),
+            Point3::new(0, 1, 0)
+        );
+        assert_eq!(
+            Point3::new(0, 1, 0).rotate(
+                &Point3::new(0, 0, 0),
+                &Vector3::new(0, 0, 1),
+                -std::f32::consts::PI / 2.
+            ),
+            Point3::new(1, 0, 0)
+        );
+        assert_eq!(
+            Point3::new(1, 1, 0).rotate(
+                &Point3::new(0, 0, 0),
+                &Vector3::new(-1, 1, 0),
+                std::f32::consts::PI / 2.
+            ),
+            Point3::new(0, 0, -1)
+        );
     }
 }
