@@ -18,8 +18,12 @@ impl Point3 {
         g2d::Point2::new(self.x, self.y)
     }
 
-    fn sub(&self, other: &Point3) -> Point3 {
-        Point3::new(self.x - other.x, self.y - other.y, self.z - other.z)
+    fn add(&self, other: &Point3) -> Point3 {
+        Point3::new(self.x + other.x, self.y + other.y, self.z + other.z)
+    }
+
+    fn neg(&self) -> Point3 {
+        Point3::new(-self.x, -self.y, -self.z)
     }
 
     /// https://www.khanacademy.org/math/multivariable-calculus/thinking-about-multivariable-function/x786f2022:vectors-and-matrices/a/cross-products-mvc
@@ -114,6 +118,13 @@ impl Triagnle3 {
             _ => false,
         }
     }
+
+    fn rotate(&self, axis_point: &Point3, axis_vector: &Vector3, angle: f32) -> Triagnle3 {
+        let p1 = self.p1.rotate(axis_point, axis_vector, angle);
+        let p2 = self.p2.rotate(axis_point, axis_vector, angle);
+        let p3 = self.p3.rotate(axis_point, axis_vector, angle);
+        Triagnle3::new(p1, p2, p3)
+    }
 }
 
 struct Plane {
@@ -130,8 +141,8 @@ impl Plane {
 
     /// https://kitchingroup.cheme.cmu.edu/blog/2015/01/18/Equation-of-a-plane-through-three-points/
     fn from_triangle(triangle: &Triagnle3) -> Self {
-        let v1 = triangle.p3.sub(&triangle.p1);
-        let v2 = triangle.p2.sub(&triangle.p1);
+        let v1 = triangle.p3.add(&triangle.p1.neg());
+        let v2 = triangle.p2.add(&triangle.p1.neg());
         let x_prod = v1.x_product(&v2);
         let dot_prod = x_prod.dot_product(&triangle.p3);
         Plane::new(x_prod.x, x_prod.y, x_prod.z, dot_prod)
