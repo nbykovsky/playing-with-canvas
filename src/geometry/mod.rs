@@ -1,7 +1,16 @@
 use std::collections::{HashMap, HashSet};
 
+use self::g3d::{Point3, Vector3};
+
 pub mod g2d;
 pub mod g3d;
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console)]
+    pub fn log(s: &str);
+}
 
 pub trait Shape {
     fn approximate(&self) -> Vec<g3d::Triagnle3>;
@@ -9,17 +18,45 @@ pub trait Shape {
 
 pub struct SetOfTriangles {
     triangles: Vec<g3d::Triagnle3>,
+    axis_point: Point3,
+    axis_vector: Vector3,
+    angle: f32,
+    intersept: Vector3,
+    move_speed: i32,
+    rotation_speed: f32,
 }
 
 impl SetOfTriangles {
-    pub fn new(triangles: Vec<g3d::Triagnle3>) -> Self {
-        SetOfTriangles { triangles }
+    pub fn new(
+        triangles: Vec<g3d::Triagnle3>,
+        axis_point: Point3,
+        axis_vector: Vector3,
+        angle: f32,
+        intersept: Vector3,
+    ) -> Self {
+        SetOfTriangles {
+            triangles,
+            axis_point,
+            axis_vector,
+            angle,
+            intersept,
+            move_speed: 0,
+            rotation_speed: 0.01,
+        }
+    }
+    pub fn step(&mut self) {
+        self.angle += self.rotation_speed;
+        self.intersept = self.intersept.shift(self.move_speed);
     }
 }
 
 impl Shape for SetOfTriangles {
     fn approximate(&self) -> Vec<g3d::Triagnle3> {
-        self.triangles.clone()
+        self.triangles
+            .iter()
+            .map(|t| t.rotate(&self.axis_point, &self.axis_vector, self.angle))
+            .map(|t| t.shift(&self.intersept))
+            .collect()
     }
 }
 
@@ -33,20 +70,25 @@ impl SceneTmp {
     }
 
     fn get_all_triangles(&self) -> Vec<g3d::Triagnle3> {
-        let result: Vec<g3d::Triagnle3> = self.shapes.triangles.clone();
-        result
+        // todo: move it out of here to the Shape trait
+        self.shapes.triangles
+            .iter()
+            .map(|t| t.rotate(&self.shapes.axis_point, &self.shapes.axis_vector, self.shapes.angle))
+            .map(|t| t.shift(&self.shapes.intersept))
+            .collect()
     }
 
     fn build_graph(&self, triangles_repo: &Vec<g3d::Triagnle3>) -> HashMap<usize, HashSet<usize>> {
         let mut graph: HashMap<usize, HashSet<usize>> = HashMap::new();
         for i in 0..triangles_repo.len() {
             for j in 0..triangles_repo.len() {
-                if triangles_repo[i].is_above(&triangles_repo[j]) {
-                    let set = graph.entry(j).or_default();
+                if i != j && triangles_repo[i].is_above(&triangles_repo[j]) {
+                    let set = graph.entry(i).or_default();
                     (*set).insert(j);
                 }
             }
         }
+        // log_js(&format!("graph={:?}", &graph));
         graph
     }
 
@@ -101,6 +143,10 @@ impl SceneTmp {
         }
         buf.as_ptr()
     }
+
+    pub fn step(&mut self) {
+        self.shapes.step();
+    }
 }
 
 #[cfg(test)]
@@ -129,7 +175,13 @@ mod test {
             g3d::Point3::new(-1, -1, -10),
             g3d::Point3::new(1, -1, -10),
         );
-        let shapes = SetOfTriangles::new(vec![t1.clone(), t2.clone(), t3.clone(), t4.clone()]);
+        let shapes = SetOfTriangles::new(
+            vec![t1.clone(), t2.clone(), t3.clone(), t4.clone()],
+            Point3::new(0, 0, 0),
+            Vector3::new(1, 1, 1),
+            0.0,
+            Vector3::new(0, 0, 0),
+        );
         let scene = SceneTmp::new(shapes);
         assert_eq!(
             scene.get_ordered_projection(),

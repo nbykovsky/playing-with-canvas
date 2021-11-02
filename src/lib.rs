@@ -5,6 +5,8 @@ use std::fmt::format;
 
 use wasm_bindgen::prelude::*;
 
+use crate::geometry::g3d::{Point3, Vector3};
+
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
 #[cfg(feature = "wee_alloc")]
@@ -84,14 +86,54 @@ pub struct Scene {
 #[wasm_bindgen]
 impl Scene {
     pub fn new() -> Self {
-        let tri = geometry::g3d::Triagnle3::new(
-            geometry::g3d::Point3::new(200, 200, 400),
-            geometry::g3d::Point3::new(600, 200, 400),
+        let tri1 = geometry::g3d::Triagnle3::new(
+            geometry::g3d::Point3::new(200, 200, 0),
+            geometry::g3d::Point3::new(600, 200, 0),
             geometry::g3d::Point3::new(300, 500, 0),
         );
-        let shapes = geometry::SetOfTriangles::new(vec![tri]);
+        let tri2 = geometry::g3d::Triagnle3::new(
+            geometry::g3d::Point3::new(200, 200, 50),
+            geometry::g3d::Point3::new(600, 200, 50),
+            geometry::g3d::Point3::new(300, 500, 50),
+        );
+
+        // let tri1 = geometry::g3d::Triagnle3::new(
+        //     geometry::g3d::Point3::new(200, 200, 500),
+        //     geometry::g3d::Point3::new(600, 200, 500),
+        //     geometry::g3d::Point3::new(300, 500, 500),
+        // );
+        
+        // let tri2 = geometry::g3d::Triagnle3::new(
+        //     geometry::g3d::Point3::new(200, 200, 505),
+        //     geometry::g3d::Point3::new(600, 200, 505),
+        //     geometry::g3d::Point3::new(300, 400, 600),
+        // );
+
+        // let tri3 = geometry::g3d::Triagnle3::new(
+        //     geometry::g3d::Point3::new(600, 205, 505),
+        //     geometry::g3d::Point3::new(305, 500, 505),
+        //     geometry::g3d::Point3::new(295, 395, 600),
+        // );
+
+        // let tri4 = geometry::g3d::Triagnle3::new(
+        //     geometry::g3d::Point3::new(200, 205, 505),
+        //     geometry::g3d::Point3::new(295, 500, 505),
+        //     geometry::g3d::Point3::new(305, 395, 600),
+        // );
+
+        let shapes = geometry::SetOfTriangles::new(
+            vec![tri1, tri2],
+            Point3::new(0, 0, 0),
+            Vector3::new(100, 100, 10),
+            0.01,
+            Vector3::new(0, 0, 0)
+        );
         let scene_tmp = geometry::SceneTmp::new(shapes);
         Self { scene_tmp }
+    }
+
+    pub fn tick(&mut self) {
+        self.scene_tmp.step();
     }
 
     pub fn render(&self) -> *const i32 {

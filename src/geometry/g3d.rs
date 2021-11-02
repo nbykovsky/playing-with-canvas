@@ -1,4 +1,5 @@
 use super::g2d;
+use crate::geometry::log;
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub struct Point3 {
@@ -7,7 +8,7 @@ pub struct Point3 {
     z: i32,
 }
 
-type Vector3 = Point3;
+pub type Vector3 = Point3;
 
 impl Point3 {
     pub fn new(x: i32, y: i32, z: i32) -> Self {
@@ -24,6 +25,10 @@ impl Point3 {
 
     fn neg(&self) -> Point3 {
         Point3::new(-self.x, -self.y, -self.z)
+    }
+
+    pub fn shift(&self, scalar: i32) -> Point3 {
+        Point3::new(self.x + scalar, self.y + scalar, self.z + scalar)
     }
 
     /// https://www.khanacademy.org/math/multivariable-calculus/thinking-about-multivariable-function/x786f2022:vectors-and-matrices/a/cross-products-mvc
@@ -110,6 +115,7 @@ impl Triagnle3 {
                     let other_h = Plane::from_triangle(&other)
                         .get_z(point.x, point.y)
                         .unwrap();
+                    log(&format!("self_h={};other_h={}", &self_h, &other_h));
                     self_h > other_h
                 } else {
                     false
@@ -119,10 +125,17 @@ impl Triagnle3 {
         }
     }
 
-    fn rotate(&self, axis_point: &Point3, axis_vector: &Vector3, angle: f32) -> Triagnle3 {
+    pub fn rotate(&self, axis_point: &Point3, axis_vector: &Vector3, angle: f32) -> Triagnle3 {
         let p1 = self.p1.rotate(axis_point, axis_vector, angle);
         let p2 = self.p2.rotate(axis_point, axis_vector, angle);
         let p3 = self.p3.rotate(axis_point, axis_vector, angle);
+        Triagnle3::new(p1, p2, p3)
+    }
+
+    pub fn shift(&self, vector: &Vector3) -> Triagnle3 {
+        let p1 = self.p1.add(&vector);
+        let p2 = self.p2.add(&vector);
+        let p3 = self.p3.add(&vector);
         Triagnle3::new(p1, p2, p3)
     }
 }

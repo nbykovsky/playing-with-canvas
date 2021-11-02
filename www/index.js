@@ -45,10 +45,15 @@ function draw_scene(scene) {
 
 var scene = wasm.Scene.new();
 
+function sleep(delay) {
+    var start = new Date().getTime();
+    while (new Date().getTime() < start + delay);
+}
+
 const renderLoop = () => {
 
     ctx.clearRect(0, 0, WIDTH, HEIGNT);
-
+    // sleep(1000);
     draw_scene(scene);
     scene.tick();
 
